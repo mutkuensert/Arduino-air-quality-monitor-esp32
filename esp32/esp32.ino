@@ -2,18 +2,15 @@
 #include "time.h"
 #include <Arduino.h>
 #include "Credentials.h"
+#include "Config.h"
+#include "Connector.h"
 
 constexpr char* NTP_SERVER = "pool.ntp.org";
 constexpr long GMT_OFFSET_SEC = 3 * 3600;
 constexpr int DAYLIGHT_OFFSET_SEC = 0;
-
 constexpr int SIGNAL_PIN = 15;
-
-IPAddress localIp(192, 168, 0, 184);
-IPAddress gateway(192, 168, 0, 1);
-IPAddress subnet(255, 255, 255, 0);
-
 WiFiServer server(80);
+Connector connector(Serial, localIp, gateway, subnet);
 long rssi = 0;
 
 volatile bool isDataReady = false;
@@ -46,25 +43,9 @@ void setup() {
 
   delay(10);
 
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.config(localIp, gateway, subnet);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  if(!connector.connectToWifi(ssid, password)){
+    connector.startAccessPoint("AccessPoint", "12345");
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println("Signal strength (RSSI):");
-  Serial.println(WiFi.RSSI());
 
   configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
 
