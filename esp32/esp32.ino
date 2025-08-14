@@ -3,21 +3,22 @@
 #include <Arduino.h>
 #include "Credentials.h"
 #include "Config.h"
-#include "Connector.h"
+#include "WirelessConnector.h"
+#include "ClientInteractor.h"
 
 constexpr char* NTP_SERVER = "pool.ntp.org";
 constexpr long GMT_OFFSET_SEC = 3 * 3600;
 constexpr int DAYLIGHT_OFFSET_SEC = 0;
 constexpr int SIGNAL_PIN = 15;
 WiFiServer server(80);
-Connector connector(Serial, localIp, gateway, subnet);
+WirelessConnector wirelessConnector(Serial, localIp, gateway, subnet);
 long rssi = 0;
 
 volatile bool isDataReady = false;
 constexpr uint8_t DATA_HEAD = 0xAA;
 
-String htmlData = "";
-String jsonData = "";
+char htmlData[200];  //It's a char array just for an example
+char jsonData[100];
 
 void IRAM_ATTR setDataReady() {
   isDataReady = true;
@@ -43,19 +44,13 @@ void setup() {
 
   delay(10);
 
-  if(!connector.connectToWifi(ssid, password)){
-    connector.startAccessPoint("AccessPoint", "12345");
+  if (!wirelessConnector.connectToWifi(ssid, password)) {
+    wirelessConnector.startAccessPoint("AccessPoint", "12345");
   }
 
-  configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+  //configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
 
   server.begin();
-}
-
-void flushSerial() {
-  while (Serial.available() > 0) {
-    Serial.read();
-  }
 }
 
 void waitForData() {
@@ -95,23 +90,30 @@ float* getSensorData() {
 }
 
 void loop() {
-  rssi = WiFi.RSSI();
-  WiFiClient client = server.available();
-
   if (isDataReady) {
     waitForData();
     float* data = getSensorData();
-    htmlData = String(
-      "Wifi strength: " + String(rssi) + "<br>"
-      + "PM2.5: " + String(data[0]) + "<br>"
-      + "PM10: " + String(data[1]));
 
-    jsonData = String("{\"pm2.5\":") + String(data[0]) + "," + String("\"pm10\":") + String(data[1]) + String("}");
+    snprintf(htmlData, sizeof(htmlData),
+             "Wifi strength: %d<br>"
+             "PM2.5: %.1f<br>"
+             "PM10: %.1f",
+             rssi, data[0], data[1]);
+
+    snprintf(jsonData, sizeof(jsonData),
+             "{"
+             "\"pm2.5\":%.1f,"
+             "\"pm10\":%.1f"
+             "}",
+             data[0], data[1]);
 
     Serial.println("Received data:");
     Serial.println(data[0]);
     Serial.println(data[1]);
   }
+
+  WiFiClient client = server.available();
+  ClientInteractor clientInteractor = ClientInteractor(client);
 
   if (client) {
     Serial.println("New Client.");
@@ -134,23 +136,12 @@ void loop() {
         Serial.write(c);
 
         if (currentLine.startsWith("GET /json")) {
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-type:application/json; charset=UTF-8");
-          client.println();
-          client.println(jsonData);
-          client.println();
+          clientInteractor.respondJson(jsonData);
           break;
         }
 
         if (isEndOfRequest) {
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-type:text/html; charset=UTF-8");
-          client.println();
-          //struct tm currentTime = getLocalTime();
-          //client.println(&currentTime, "%Y-%m-%d %H:%M:%S");
-
-          client.println(htmlData);
-          client.println();
+          clientInteractor.printHtml(htmlData);
           break;
         }
       }
