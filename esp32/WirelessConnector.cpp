@@ -1,6 +1,7 @@
 #include "WirelessConnector.h"
 
-WirelessConnector::WirelessConnector(HardwareSerial& serial, IPAddress localIp, IPAddress gateway, IPAddress subnet): serial(serial) {
+WirelessConnector::WirelessConnector(HardwareSerial& serial, IPAddress localIp, IPAddress gateway, IPAddress subnet)
+  : serial(serial) {
   this->localIp = localIp;
   this->gateway = gateway;
   this->subnet = subnet;
@@ -11,7 +12,8 @@ bool WirelessConnector::connectToWifi(char* ssid, char* password) {
   serial.print("Connecting to ");
   serial.println(ssid);
 
-  WiFi.config(localIp, gateway, subnet);
+  //WiFi.config(localIp, gateway, subnet);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   int counter = 0;
@@ -37,10 +39,13 @@ bool WirelessConnector::connectToWifi(char* ssid, char* password) {
 bool WirelessConnector::startAccessPoint(const char* ssid, const char* password) {
   if (!WiFi.softAPConfig(localIp, gateway, subnet)) {
     serial.println("IP could not set!");
+    return false;
   }
 
+  WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
 
   serial.print("Access Point has been started. IP: ");
   serial.println(WiFi.softAPIP());
+  return true;
 }

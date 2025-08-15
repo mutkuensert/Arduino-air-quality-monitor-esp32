@@ -30,24 +30,24 @@ void handleRoot() {
       <input type="text" id="ssid" name="ssid" value=""><br>
       <label for="password">Password:</label><br>
       <input type="text" id="password" name="password" value=""><br><br>
-      <input type="save" value="Save">
+      <input type="submit" value="Save">
     </form>
   )rawliteral";
 
   String htmlData = formHtml;
   String jsonData = "";
 
-  if (isDataReady) {
-    SensorData sensorData = sds011Reader.getSensorData();
+  // if (isDataReady) {
+  //   SensorData sensorData = sds011Reader.getSensorData();
 
-    htmlData = formHtml + "<br>" + String("Wifi strength: " + String(rssi) + "<br>" + "PM2.5: " + String(sensorData.pm25) + "<br>" + "PM10: " + String(sensorData.pm10));
+  //   htmlData = formHtml + "<br>" + String("Wifi strength: " + String(rssi) + "<br>" + "PM2.5: " + String(sensorData.pm25) + "<br>" + "PM10: " + String(sensorData.pm10));
 
-    jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
+  //   jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
 
-    Serial.println("Received data:");
-    Serial.println(sensorData.pm25);
-    Serial.println(sensorData.pm10);
-  }
+  //   Serial.println("Received data:");
+  //   Serial.println(sensorData.pm25);
+  //   Serial.println(sensorData.pm10);
+  // }
 
   server.send(200, "text/html", htmlData);
 }
@@ -79,4 +79,5 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  delay(2);
 }
