@@ -17,7 +17,7 @@ bool WirelessConnector::connectToWifi(char* ssid, char* password) {
   int counter = 0;
   while (WiFi.status() != WL_CONNECTED && counter <= 10) {
     delay(500);
-    Serial.print(".");
+    serial.print(".");
     counter++;
   }
 

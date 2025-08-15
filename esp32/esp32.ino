@@ -6,6 +6,7 @@
 #include "WirelessConnector.h"
 #include <WebServer.h>
 #include "Sds011Reader.h"
+#include <stdexcept>
 
 constexpr char* NTP_SERVER = "pool.ntp.org";
 constexpr long GMT_OFFSET_SEC = 3 * 3600;
@@ -20,27 +21,6 @@ volatile bool isDataReady = false;
 
 void IRAM_ATTR setDataReady() {
   isDataReady = true;
-}
-
-void setup() {
-  pinMode(SIGNAL_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(SIGNAL_PIN), setDataReady, RISING);
-
-  Serial.begin(115200);
-
-  if (!wirelessConnector.connectToWifi(SSID, PASSWORD)) {
-    wirelessConnector.startAccessPoint("AccessPoint", "12345");
-  }
-
-  server.on("/", handleRoot);
-  //server.on("/json", handleJson);
-  //server.on("/savePassword", savePassword);
-  server.begin();
-}
-
-
-void loop() {
-  server.handleClient();
 }
 
 void handleRoot() {
@@ -70,4 +50,33 @@ void handleRoot() {
   }
 
   server.send(200, "text/html", htmlData);
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(100); 
+  Serial.println("ESP32 is started.");
+  try {
+    pinMode(SIGNAL_PIN, INPUT);
+    attachInterrupt(digitalPinToInterrupt(SIGNAL_PIN), setDataReady, RISING);
+
+    if (!wirelessConnector.connectToWifi(SSID, PASSWORD)) {
+      Serial.println("Access point is being started.");
+      wirelessConnector.startAccessPoint("AccessPoint", "12345");
+    }
+
+    server.on("/", handleRoot);
+    //server.on("/json", handleJson);
+    //server.on("/savePassword", savePassword);
+    server.begin();
+  } catch (const std::exception& e) {
+    Serial.println(String("Hata: ") + e.what());
+  } catch (...) {
+    Serial.println("Bilinmeyen bir hata yakalandı.");
+  }
+}
+
+
+void loop() {
+  server.handleClient();
 }
