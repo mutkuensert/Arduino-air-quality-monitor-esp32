@@ -28,7 +28,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  if (!wirelessConnector.connectToWifi(ssid, password)) {
+  if (!wirelessConnector.connectToWifi(SSID, PASSWORD)) {
     wirelessConnector.startAccessPoint("AccessPoint", "12345");
   }
 
