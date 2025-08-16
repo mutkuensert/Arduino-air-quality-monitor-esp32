@@ -12,7 +12,7 @@ bool WirelessConnector::connectToWifi(char* ssid, char* password) {
   serial.print("Connecting to ");
   serial.println(ssid);
 
-  //WiFi.config(localIp, gateway, subnet);
+  WiFi.config(localIp, gateway, subnet);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 

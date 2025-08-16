@@ -4,7 +4,7 @@
 #include "Credentials.h"
 #include "Config.h"
 #include "WirelessConnector.h"
-#include <WebServer.h>
+#include <WebServer.h> //https://github.com/espressif/arduino-esp32/blob/master/libraries/WebServer/examples/HelloServer/HelloServer.ino
 #include "Sds011Reader.h"
 #include <stdexcept>
 
@@ -70,9 +70,9 @@ void setup() {
     //server.on("/savePassword", savePassword);
     server.begin();
   } catch (const std::exception& e) {
-    Serial.println(String("Hata: ") + e.what());
+    Serial.println(String("Error: ") + e.what());
   } catch (...) {
-    Serial.println("Bilinmeyen bir hata yakalandı.");
+    Serial.println("An unknown error occured!");
   }
 }
 
