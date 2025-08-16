@@ -2,18 +2,18 @@
 #include "time.h"
 #include <Arduino.h>
 #include "Credentials.h"
-#include "Config.h"
 #include "WirelessConnector.h"
 #include <WebServer.h> //https://github.com/espressif/arduino-esp32/blob/master/libraries/WebServer/examples/HelloServer/HelloServer.ino
 #include "Sds011Reader.h"
 #include <stdexcept>
+#include "IpConfig.h"
 
 constexpr char* NTP_SERVER = "pool.ntp.org";
 constexpr long GMT_OFFSET_SEC = 3 * 3600;
 constexpr int DAYLIGHT_OFFSET_SEC = 0;
 constexpr int SIGNAL_PIN = 15;
 WebServer server(80);
-WirelessConnector wirelessConnector(Serial, localIp, gateway, subnet);
+WirelessConnector wirelessConnector(Serial, LOCAL_IP, GATEWAY, SUBNET);
 Sds011Reader sds011Reader(Serial);
 long rssi = 0;
 

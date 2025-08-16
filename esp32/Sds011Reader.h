@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 
-
 constexpr uint8_t DATA_HEAD = 0xAA;
 
 class SensorData {
