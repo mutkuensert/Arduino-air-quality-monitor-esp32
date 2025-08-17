@@ -24,8 +24,6 @@ bool Sds011Reader::readUntilDataHead()
     }
     delay(1);
   }
-  Logfln("Something is wrong. Read value: 0x%02X", value);
-  return false;
 }
 
 void Sds011Reader::waitForData()
