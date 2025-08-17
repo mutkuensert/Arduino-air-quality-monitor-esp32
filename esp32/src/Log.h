@@ -28,6 +28,11 @@ void logfln(const char* func, int line, const char* fmt, ...) {
     va_start(args, fmt);
     vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    logf(func, line, fmt, buffer);
-    Serial.println("");
+
+    Serial.print("[");
+    Serial.print(func);
+    Serial.print(":");
+    Serial.print(line);
+    Serial.print("] ");
+    Serial.println(buffer);
 }
