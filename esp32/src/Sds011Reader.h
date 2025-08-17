@@ -19,9 +19,12 @@ public:
 
   Sds011Reader(HardwareSerial& serial);
 
-  void readUntilDataHead();
+  bool readUntilDataHead();
   int convertHighLowByteToDecimal(uint8_t high, uint8_t low);
-  SensorData getSensorData();
+  SensorData getLastSensorData();
+
+private:
+  SensorData readSensorData();
 private:
   void waitForData();
 };
