@@ -1,106 +1,22 @@
-#include <WiFi.h>
 #include "time.h"
 #include <Arduino.h>
 #include "Credentials.h"
 #include "WirelessConnector.h"
-#include <WebServer.h> //https://github.com/espressif/arduino-esp32/blob/master/libraries/WebServer/examples/HelloServer/HelloServer.ino
 #include "Sds011Reader.h"
 #include <stdexcept>
 #include "IpConfig.h"
-#include <Preferences.h>
 #include <nvs_flash.h>
 #include "Log.h"
+#include "Presenter.h"
+#include "PasswordManager.h"
 
 constexpr char *NTP_SERVER = "pool.ntp.org";
 constexpr long GMT_OFFSET_SEC = 3 * 3600;
 constexpr int DAYLIGHT_OFFSET_SEC = 0;
 constexpr int SIGNAL_PIN = 15;
-constexpr char *PREFS_ESP32 = "ESP32";
-constexpr char *KEY_PREFS_SSID = "SSID";
-constexpr char *KEY_PREFS_PASSWORD = "PASSWORD";
 
-WebServer server(80);
 WirelessConnector wirelessConnector(LOCAL_IP, GATEWAY, SUBNET);
-Sds011Reader sds011Reader(Serial);
-Preferences preferences;
-
-volatile bool isDataReady = false;
-
-void IRAM_ATTR setDataReady()
-{
-  isDataReady = true;
-}
-
-void handleRoot()
-{
-  preferences.begin(PREFS_ESP32);
-  String savedSsid = preferences.getString(KEY_PREFS_SSID, "");
-  String savedPassword = preferences.getString(KEY_PREFS_PASSWORD, "");
-  preferences.end();
-
-  String formHtml = R"(
-    <form action="/savePassword" method="GET">
-      <label for="ssid">SSID:</label><br>
-      <input type="text" id="ssid" name="ssid" value=")" +
-                    savedSsid + R"("><br>
-      <label for="password">Password:</label><br>
-      <input type="text" id="password" name="password" value=")" +
-                    savedPassword + R"("><br><br>
-    <input type="submit" value="Save">
-    </form>
-  )";
-
-  String htmlData = formHtml;
-  String jsonData = "";
-
-  if (isDataReady)
-  {
-    SensorData sensorData = sds011Reader.getLastSensorData();
-
-    htmlData = formHtml + "<br>" + "Wifi strength: " + String(WiFi.RSSI()) + "<br>" + "PM2.5: " + String(sensorData.pm25) + "<br>" + "PM10: " + String(sensorData.pm10);
-
-    jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
-
-    Logfln("Received data: Pm2.5: %f, Pm10: %f", sensorData.pm25, sensorData.pm10);
-  }
-  else
-  {
-    htmlData = formHtml + "<br>" + "Data is not ready.";
-  }
-
-  server.send(200, "text/html", htmlData);
-}
-
-void handleJson()
-{
-  String jsonData = "";
-
-  if (isDataReady)
-  {
-    SensorData sensorData = sds011Reader.getLastSensorData();
-    jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
-
-    Logfln("Received data: Pm2.5: %f, Pm10: %f", sensorData.pm25, sensorData.pm10);
-  }
-
-  server.send(200, "application/json", jsonData);
-}
-
-void handleSavePassword()
-{
-  String ssid = server.arg("ssid");
-  String password = server.arg("password");
-
-  preferences.begin(PREFS_ESP32);
-  preferences.putString(KEY_PREFS_SSID, ssid);
-  preferences.putString(KEY_PREFS_PASSWORD, password);
-  preferences.end();
-
-  String response = "Successfully saved.";
-  server.send(200, "text/html", response);
-
-  Logfln("Received SSID: %s, Password: %s", ssid, password);
-}
+Presenter presenter;
 
 void cleanRom()
 {
@@ -112,38 +28,19 @@ void setup()
 {
   Serial.begin(115200);
 
-  preferences.begin(PREFS_ESP32);
-  String savedSsid = preferences.getString(KEY_PREFS_SSID, "");
-  String savedPassword = preferences.getString(KEY_PREFS_PASSWORD, "");
-  preferences.end();
-
-  if (savedSsid == "")
-  {
-    savedSsid = SSID;
-    savedPassword = PASSWORD;
-  }
-
   try
   {
     pinMode(SIGNAL_PIN, INPUT);
-    attachInterrupt(digitalPinToInterrupt(SIGNAL_PIN), setDataReady, RISING);
+    attachInterrupt(digitalPinToInterrupt(SIGNAL_PIN), Presenter::setDataReady, RISING);
 
-    char savedSsidBuffer[50];
-    char savedPasswordBuffer[50];
-    savedSsid.toCharArray(savedSsidBuffer, 50);
-    savedPassword.toCharArray(savedPasswordBuffer, 50);
-
-    if (!wirelessConnector.connectToWifi(savedSsidBuffer, savedPasswordBuffer))
+    if (!wirelessConnector.connectToWifi(passwordManager.getSsid(), passwordManager.getPassword()))
     {
       Logln("");
       Logln("Wifi connection is unsuccessful. Access point is being started.");
       wirelessConnector.startAccessPoint("AccessPoint", "123456789");
     }
 
-    server.on("/", handleRoot);
-    server.on("/json", handleJson);
-    server.on("/savePassword", handleSavePassword);
-    server.begin();
+    presenter.startServer();
   }
   catch (const std::exception &e)
   {
@@ -157,6 +54,6 @@ void setup()
 
 void loop()
 {
-  server.handleClient();
+  presenter.handleClient();
   delay(2);
 }

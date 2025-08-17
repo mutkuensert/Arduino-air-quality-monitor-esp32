@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include "Log.h"
 
 class WirelessConnector {
 public:
@@ -12,7 +13,7 @@ public:
 
   WirelessConnector(IPAddress localIp, IPAddress gateway, IPAddress subnet);
 
-  bool connectToWifi(char* ssid, char* password);
+  bool connectToWifi(String ssid, String password);
   bool startAccessPoint(const char* ssid, const char* password);
 };
 

@@ -2,6 +2,7 @@
 #define SDS011READER_H
 
 #include <Arduino.h>
+#include "Log.h"
 
 constexpr uint8_t DATA_HEAD = 0xAA;
 

@@ -1,5 +1,4 @@
 #include "WirelessConnector.h"
-#include "Log.h"
 
 WirelessConnector::WirelessConnector(IPAddress localIp, IPAddress gateway, IPAddress subnet)
 {
@@ -8,7 +7,7 @@ WirelessConnector::WirelessConnector(IPAddress localIp, IPAddress gateway, IPAdd
   this->subnet = subnet;
 }
 
-bool WirelessConnector::connectToWifi(char *ssid, char *password)
+bool WirelessConnector::connectToWifi(String ssid, String password)
 {
   Logfln("Connecting to %s", ssid);
 

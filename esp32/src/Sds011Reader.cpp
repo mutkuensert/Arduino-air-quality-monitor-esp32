@@ -1,5 +1,4 @@
 #include "Sds011Reader.h"
-#include "Log.h"
 
 Sds011Reader::Sds011Reader(HardwareSerial &serial)
     : serial(serial) {}
