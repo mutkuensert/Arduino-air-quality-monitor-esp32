@@ -9,6 +9,7 @@
 #include "IpConfig.h"
 #include <Preferences.h>
 #include <nvs_flash.h>
+#include "Log.h"
 
 constexpr char *NTP_SERVER = "pool.ntp.org";
 constexpr long GMT_OFFSET_SEC = 3 * 3600;
@@ -19,7 +20,7 @@ constexpr char *KEY_PREFS_SSID = "SSID";
 constexpr char *KEY_PREFS_PASSWORD = "PASSWORD";
 
 WebServer server(80);
-WirelessConnector wirelessConnector(Serial, LOCAL_IP, GATEWAY, SUBNET);
+WirelessConnector wirelessConnector(LOCAL_IP, GATEWAY, SUBNET);
 Sds011Reader sds011Reader(Serial);
 Preferences preferences;
 
@@ -60,12 +61,25 @@ void handleRoot()
 
     jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
 
-    Serial.println("Received data:");
-    Serial.println(sensorData.pm25);
-    Serial.println(sensorData.pm10);
+    Logfln("Received data: Pm2.5: %f, Pm10: %f",sensorData.pm25, sensorData.pm10);
   }
 
   server.send(200, "text/html", htmlData);
+}
+
+void handleJson()
+{
+  String jsonData = "";
+
+  if (isDataReady)
+  {
+    SensorData sensorData = sds011Reader.getLastSensorData();
+    jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
+
+    Logfln("Received data: Pm2.5: %f, Pm10: %f",sensorData.pm25, sensorData.pm10);
+  }
+
+  server.send(200, "application/json", jsonData);
 }
 
 void handleSavePassword()
@@ -81,9 +95,7 @@ void handleSavePassword()
   String response = "Successfully saved.";
   server.send(200, "text/html", response);
 
-  Serial.println("Received:");
-  Serial.println("SSID: " + ssid);
-  Serial.println("Password: " + password);
+  Logfln("Received SSID: %s, Password: %s",ssid, password);
 }
 
 void cleanRom()
@@ -119,22 +131,23 @@ void setup()
 
     if (!wirelessConnector.connectToWifi(savedSsidBuffer, savedPasswordBuffer))
     {
-      Serial.println("Access point is being started.");
+      Logln("");
+      Logln("Wifi connection is unsuccessful. Access point is being started.");
       wirelessConnector.startAccessPoint("AccessPoint", "123456789");
     }
 
     server.on("/", handleRoot);
-    // server.on("/json", handleJson);
+    server.on("/json", handleJson);
     server.on("/savePassword", handleSavePassword);
     server.begin();
   }
   catch (const std::exception &e)
   {
-    Serial.println(String("Error: ") + e.what());
+    Logln(String("Error: ") + e.what());
   }
   catch (...)
   {
-    Serial.println("An unknown error occured!");
+    Logln("An unknown error occured!");
   }
 }
 

@@ -1,51 +1,56 @@
 #include "WirelessConnector.h"
+#include "Log.h"
 
-WirelessConnector::WirelessConnector(HardwareSerial& serial, IPAddress localIp, IPAddress gateway, IPAddress subnet)
-  : serial(serial) {
+WirelessConnector::WirelessConnector(IPAddress localIp, IPAddress gateway, IPAddress subnet)
+{
   this->localIp = localIp;
   this->gateway = gateway;
   this->subnet = subnet;
 }
 
-bool WirelessConnector::connectToWifi(char* ssid, char* password) {
-  serial.println();
-  serial.print("Connecting to ");
-  serial.println(ssid);
+bool WirelessConnector::connectToWifi(char *ssid, char *password)
+{
+  Logfln("Connecting to %s", ssid);
 
   WiFi.config(localIp, gateway, subnet);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   int counter = 0;
-  while (WiFi.status() != WL_CONNECTED && counter <= 10) {
+  LogPlainLn("");
+  while (WiFi.status() != WL_CONNECTED && counter <= 10)
+  {
     delay(500);
-    serial.print(".");
+    LogPlain(".");
     counter++;
   }
 
-  if (WiFi.status() != WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED)
+  {
     return false;
   }
 
-  serial.println("");
-  serial.println("WiFi connected.");
-  serial.println("IP address: ");
-  serial.println(WiFi.localIP());
-  serial.println("Signal strength (RSSI):");
-  serial.println(WiFi.RSSI());
+  Logln("");
+  Logln("WiFi connected.");
+  Logln("IP address: ");
+  Logln(WiFi.localIP());
+  Logln("Signal strength (RSSI):");
+  Logln(WiFi.RSSI());
   return true;
 }
 
-bool WirelessConnector::startAccessPoint(const char* ssid, const char* password) {
-  if (!WiFi.softAPConfig(localIp, gateway, subnet)) {
-    serial.println("IP could not set!");
+bool WirelessConnector::startAccessPoint(const char *ssid, const char *password)
+{
+  if (!WiFi.softAPConfig(localIp, gateway, subnet))
+  {
+    Logln("IP could not set!");
     return false;
   }
 
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
 
-  serial.print("Access Point has been started. IP: ");
-  serial.println(WiFi.softAPIP());
+  Log("Access Point has been started. IP: ");
+  LogPlainLn(WiFi.softAPIP());
   return true;
 }
