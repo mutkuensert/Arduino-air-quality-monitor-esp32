@@ -57,11 +57,15 @@ void handleRoot()
   {
     SensorData sensorData = sds011Reader.getLastSensorData();
 
-    htmlData = formHtml + "<br>" + String("Wifi strength: " + String(WiFi.RSSI()) + "<br>" + "PM2.5: " + String(sensorData.pm25) + "<br>" + "PM10: " + String(sensorData.pm10));
+    htmlData = formHtml + "<br>" + "Wifi strength: " + String(WiFi.RSSI()) + "<br>" + "PM2.5: " + String(sensorData.pm25) + "<br>" + "PM10: " + String(sensorData.pm10);
 
     jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
 
-    Logfln("Received data: Pm2.5: %f, Pm10: %f",sensorData.pm25, sensorData.pm10);
+    Logfln("Received data: Pm2.5: %f, Pm10: %f", sensorData.pm25, sensorData.pm10);
+  }
+  else
+  {
+    htmlData = formHtml + "<br>" + "Data is not ready.";
   }
 
   server.send(200, "text/html", htmlData);
@@ -76,7 +80,7 @@ void handleJson()
     SensorData sensorData = sds011Reader.getLastSensorData();
     jsonData = String("{\"pm2.5\":") + String(sensorData.pm25) + "," + String("\"pm10\":") + String(sensorData.pm10) + String("}");
 
-    Logfln("Received data: Pm2.5: %f, Pm10: %f",sensorData.pm25, sensorData.pm10);
+    Logfln("Received data: Pm2.5: %f, Pm10: %f", sensorData.pm25, sensorData.pm10);
   }
 
   server.send(200, "application/json", jsonData);
@@ -95,7 +99,7 @@ void handleSavePassword()
   String response = "Successfully saved.";
   server.send(200, "text/html", response);
 
-  Logfln("Received SSID: %s, Password: %s",ssid, password);
+  Logfln("Received SSID: %s, Password: %s", ssid, password);
 }
 
 void cleanRom()
