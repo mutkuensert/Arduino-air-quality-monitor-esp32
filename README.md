@@ -11,6 +11,12 @@ This project is an air quality monitoring system that measures particulate matte
 ___
 
 <div align="center">
+ <img src="docs/circuit_perfboard.jpeg" width="600"/>
+</div>
+
+---
+
+<div align="center">
  <img src="docs/android_app_screen_shot.png" width="300"/>
 </div>
 
