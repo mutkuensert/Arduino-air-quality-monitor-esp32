@@ -5,7 +5,7 @@
 This project is an air quality monitoring system that measures particulate matter (PM2.5 and PM10) using an SDS011 sensor, displays the results on an LCD, transmits the data via an ESP32 microcontroller, and provides real-time monitoring and notifications through a modern Android application.
 
 <div align="center">
- <img src="docs/circuit_schematic.PNG" width="1000"/>
+ <img src="docs/circuit_schematic_2.PNG" width="1000"/>
 </div>
 
 ___
